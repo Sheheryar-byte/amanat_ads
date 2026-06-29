@@ -1,0 +1,496 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --maroon: #723838;
+  --maroon-dark: #5a2a2a;
+  --maroon-light: #8a4444;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  background: #ffffff;
+  color: #111111;
+  font-family: var(--font-poppins), 'Poppins', sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+.hero-section {
+  position: relative;
+  background-color: #2c1010;
+  background-image: url('/assets/background.jpg');
+  background-size: cover;
+  background-position: center top;
+  min-height: 380px;
+  overflow: visible;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(30, 8, 8, 0.92) 0%, rgba(80, 20, 20, 0.85) 50%, rgba(20, 5, 5, 0.95) 100%);
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.site-header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 40px;
+}
+
+.book-now-btn {
+  background: transparent;
+  color: white;
+  border: 2px solid white;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-family: var(--font-poppins), 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.book-now-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================
+   SECTION TITLES
+   ============================================ */
+.section-title-maroon {
+  font-family: var(--font-poppins), 'Poppins', sans-serif;
+  font-weight: 700;
+  color: #723838;
+  line-height: 1.2;
+}
+
+.section-title-dark {
+  font-family: var(--font-poppins), 'Poppins', sans-serif;
+  font-weight: 700;
+  color: #111111;
+  line-height: 1.2;
+}
+
+.section-title-white {
+  font-family: var(--font-poppins), 'Poppins', sans-serif;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+/* ============================================
+   WHAT CAN YOU EXPECT GRID ITEMS
+   ============================================ */
+.expect-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-family: var(--font-poppins), 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  color: #333333;
+  line-height: 1.4;
+}
+
+.expect-arrow {
+  color: #723838;
+  font-weight: 700;
+  font-size: 16px;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   DARK SECTION (Not all eyes qualify)
+   ============================================ */
+.dark-section {
+  background-color: #1a0808;
+  background-image: url('/assets/background.jpg');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.dark-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(15, 3, 3, 0.93) 0%, rgba(70, 15, 15, 0.88) 50%, rgba(10, 2, 2, 0.95) 100%);
+  z-index: 1;
+}
+
+.dark-section-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* ============================================
+   CTA BOOKING SECTION
+   ============================================ */
+.cta-section {
+  background-color: #1a0808;
+  background-image: url('/assets/background.jpg');
+  background-size: cover;
+  background-position: center bottom;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.cta-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(15, 3, 3, 0.92) 0%, rgba(80, 18, 18, 0.85) 60%, rgba(10, 2, 2, 0.95) 100%);
+  z-index: 1;
+  border-radius: 16px;
+}
+
+.cta-section-content {
+  position: relative;
+  z-index: 2;
+}
+
+.cta-consult-btn {
+  display: inline-block;
+  background: transparent;
+  color: white;
+  border: 2px solid white;
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-family: var(--font-inter), 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 15px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.cta-consult-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.site-footer {
+  background-color: #f5f5f5;
+  border-top: 1px solid #e0e0e0;
+}
+
+.footer-social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #2c2c2c;
+  color: white;
+  text-decoration: none;
+  transition: background 0.2s ease;
+  font-size: 14px;
+}
+
+.footer-social-link:hover {
+  background: #723838;
+}
+
+/* ============================================
+   DOCTOR & HOSPITAL IMAGES
+   ============================================ */
+.doctor-image-container {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.hospital-image-container {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* ============================================
+   BULLET LIST (Dark Section)
+   ============================================ */
+.dark-bullet-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dark-bullet-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #e0e0e0;
+  font-size: 15px;
+  margin-bottom: 6px;
+  font-family: var(--font-poppins), 'Poppins', sans-serif;
+}
+
+.dark-bullet-list li::before {
+  content: '•';
+  color: #e0e0e0;
+  font-size: 18px;
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   RESPONSIVE – MOBILE
+   ============================================ */
+
+/* Tablet */
+@media (max-width: 900px) {
+  .expect-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 28px !important;
+  }
+
+  .dark-images-wrapper {
+    display: none !important;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .site-header {
+    padding: 12px 16px;
+  }
+
+  .hero-section {
+    min-height: 220px;
+    overflow-x: hidden;
+  }
+
+  .section-title-white {
+    font-size: clamp(24px, 8vw, 36px) !important;
+  }
+
+
+
+  .expect-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  .doctor-image-container {
+    display: none !important;
+  }
+
+  .expect-row {
+    flex-wrap: wrap !important;
+  }
+
+  .dark-content-row {
+    flex-direction: column !important;
+  }
+
+  .dark-images-wrapper {
+    display: none !important;
+  }
+
+  .cta-section-content {
+    padding: 40px 24px !important;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
+  .content-container {
+    padding: 0 16px;
+  }
+
+  /* Hero: stack vertically, prevent overflow */
+  .hero-flex-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    overflow-x: hidden !important;
+  }
+
+  .hero-text-container {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .hero-device-container {
+    display: none !important;
+  }
+
+  .hero-content {
+    padding: 80px 0 32px 0 !important;
+  }
+}
+
+/* ============================================
+   ANIMATIONS & HOVER EFFECTS (ADDED)
+   ============================================ */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-title-line-1 {
+  display: block;
+  opacity: 0;
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.1s;
+}
+
+.hero-title-line-2 {
+  display: block;
+  opacity: 0;
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.3s;
+  white-space: normal;
+}
+
+.hero-subtitle {
+  display: block;
+  opacity: 0;
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.5s;
+}
+
+/* Floating animation for the Hero Device */
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.hero-device-container {
+  opacity: 0;
+  animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.4s;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease;
+  position: relative;
+  z-index: 10;
+}
+
+.hero-device-container:hover {
+  transform: scale(1.06) translateY(-8px) !important;
+}
+
+.hero-device-image {
+  animation: float 6s ease-in-out infinite;
+  animation-delay: 1.4s;
+  transition: filter 0.5s ease;
+}
+
+/* Interactive Image Hover Effects */
+.interactive-image-container {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Shine overlay effect */
+.interactive-image-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 100%);
+  transform: skewX(-25deg);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.interactive-image-container:hover::after {
+  animation: shine 0.85s ease-in-out;
+}
+
+@keyframes shine {
+  100% {
+    left: 125%;
+  }
+}
+
+.interactive-image-container:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(114, 56, 56, 0.2) !important;
+}
+
+.interactive-image {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s ease;
+}
+
+.interactive-image-container:hover .interactive-image {
+  transform: scale(1.06) !important;
+  filter: brightness(1.04) contrast(1.02);
+}
+
+/* Content Container for unified page alignment */
+.content-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 10 6vw;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    padding: 0 24px;
+  }
+}

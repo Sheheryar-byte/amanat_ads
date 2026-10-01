@@ -21,8 +21,16 @@ cp -r .next/static       "$APP_RUN_DIR/.next/static"
 cp -r public             "$APP_RUN_DIR/public"
 
 echo "[3/4] Restarting with PM2..."
-pm2 restart amanat-ads 2>/dev/null || \
-  PORT=$APP_PORT pm2 start "$APP_RUN_DIR/server.js" --name "amanat-ads" --env production
+# ADMIN_PASSWORD and ADMIN_SECRET come from the shell environment
+# (set by GitHub Actions from GitHub Secrets before this script runs).
+env \
+  PORT=$APP_PORT \
+  ADMIN_PASSWORD="${ADMIN_PASSWORD:?ADMIN_PASSWORD env var is required}" \
+  ADMIN_SECRET="${ADMIN_SECRET:?ADMIN_SECRET env var is required}" \
+  NODE_ENV=production \
+  pm2 restart amanat-ads 2>/dev/null || \
+  env PORT=$APP_PORT ADMIN_PASSWORD="$ADMIN_PASSWORD" ADMIN_SECRET="$ADMIN_SECRET" NODE_ENV=production \
+    pm2 start "$APP_RUN_DIR/server.js" --name "amanat-ads"
 pm2 save
 
 echo "[4/4] Reloading NGINX..."

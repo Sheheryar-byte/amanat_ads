@@ -77,6 +77,9 @@ jobs:
           echo "instance_ids=$(echo $IDS | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
       - name: Deploy to each VMSS instance
+        env:
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
         run: |
           INSTANCE_IDS="${{ steps.get-instances.outputs.instance_ids }}"
           if [ -z "$INSTANCE_IDS" ]; then
@@ -93,8 +96,13 @@ jobs:
               --name "${{ env.AZURE_VMSS_NAME }}" \
               --command-id RunShellScript \
               --instance-id "$INSTANCE_ID" \
+              --parameters "ADMIN_PASSWORD=$ADMIN_PASSWORD" "ADMIN_SECRET=$ADMIN_SECRET" \
               --scripts "
                 set -e
+                # Read secrets passed as parameters (positional: \$1 and \$2)
+                export ADMIN_PASSWORD=\"\${1#ADMIN_PASSWORD=}\"
+                export ADMIN_SECRET=\"\${2#ADMIN_SECRET=}\"
+
                 echo '--- Pulling latest code ---'
                 cd ${{ env.APP_DIR }}
                 git pull origin main
@@ -111,10 +119,14 @@ jobs:
                 cp -r .next/static       ${{ env.APP_RUN_DIR }}/.next/static
                 cp -r public             ${{ env.APP_RUN_DIR }}/public
 
-                echo '--- Restarting PM2 ---'
-                pm2 restart amanat-ads || \
-                  PORT=3000 pm2 start ${{ env.APP_RUN_DIR }}/server.js \
-                    --name amanat-ads --env production
+                echo '--- Restarting PM2 with secrets ---'
+                env PORT=3000 \
+                    ADMIN_PASSWORD=\"\$ADMIN_PASSWORD\" \
+                    ADMIN_SECRET=\"\$ADMIN_SECRET\" \
+                    NODE_ENV=production \
+                    pm2 restart amanat-ads 2>/dev/null || \
+                env PORT=3000 ADMIN_PASSWORD=\"\$ADMIN_PASSWORD\" ADMIN_SECRET=\"\$ADMIN_SECRET\" NODE_ENV=production \
+                    pm2 start ${{ env.APP_RUN_DIR }}/server.js --name amanat-ads
                 pm2 save
 
                 echo '--- Reloading NGINX ---'

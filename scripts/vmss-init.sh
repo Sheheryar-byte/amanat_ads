@@ -37,7 +37,14 @@ sudo cp -r "$APP_DIR/public"             "$APP_RUN_DIR/public"
 echo "[6/7] Starting with PM2..."
 sudo pm2 stop   amanat-ads 2>/dev/null || true
 sudo pm2 delete amanat-ads 2>/dev/null || true
-sudo PORT=$APP_PORT pm2 start "$APP_RUN_DIR/server.js" --name "amanat-ads" --env production
+# ADMIN_PASSWORD and ADMIN_SECRET are injected by GitHub Actions from GitHub Secrets.
+# They are NEVER stored in code — only exist as process environment variables.
+sudo env \
+  PORT=$APP_PORT \
+  ADMIN_PASSWORD="${ADMIN_PASSWORD:?ADMIN_PASSWORD env var is required}" \
+  ADMIN_SECRET="${ADMIN_SECRET:?ADMIN_SECRET env var is required}" \
+  NODE_ENV=production \
+  pm2 start "$APP_RUN_DIR/server.js" --name "amanat-ads"
 sudo env PATH="$PATH:/usr/bin" pm2 startup systemd -u root --hp /root
 sudo pm2 save
 
@@ -53,7 +60,9 @@ server {
     add_header X-Frame-Options        "SAMEORIGIN"   always;
     add_header X-Content-Type-Options "nosniff"      always;
 
-    location /_next/static/ {
+    # Static assets: Next.js requests these at /ms39/_next/static/ because
+    # assetPrefix="/ms39" is set in next.config.mjs. Cache aggressively.
+    location /ms39/_next/static/ {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
@@ -61,7 +70,8 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
-    location / {
+    # All other /ms39/* requests (pages, API routes, etc.)
+    location /ms39/ {
         proxy_pass            http://127.0.0.1:3000;
         proxy_http_version    1.1;
         proxy_set_header      Upgrade    $http_upgrade;
@@ -71,6 +81,18 @@ server {
         proxy_set_header      X-Forwarded-For   $proxy_add_x_forwarded_for;
         proxy_set_header      X-Forwarded-Proto $scheme;
         proxy_cache_bypass    $http_upgrade;
+        proxy_read_timeout    60s;
+        proxy_connect_timeout 10s;
+    }
+
+    # Exact match for /ms39 (without trailing slash)
+    location = /ms39 {
+        proxy_pass            http://127.0.0.1:3000;
+        proxy_http_version    1.1;
+        proxy_set_header      Host       $host;
+        proxy_set_header      X-Real-IP  $remote_addr;
+        proxy_set_header      X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header      X-Forwarded-Proto $scheme;
         proxy_read_timeout    60s;
         proxy_connect_timeout 10s;
     }

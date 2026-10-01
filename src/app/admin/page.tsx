@@ -17,28 +17,19 @@ interface Appointment {
 
 export default function AdminPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [password, setPassword] = useState("");
-  const [authenticated, setAuthenticated] = useState(false);
-  const [wrongPassword, setWrongPassword] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedCity, setSelectedCity] = useState("All");
 
-  const ADMIN_PASSWORD = "amanat2024";
-
+  // Middleware (src/middleware.ts) already verified the session cookie
+  // before this page renders — no client-side password check needed.
   useEffect(() => {
-    if (authenticated) {
-      const stored = JSON.parse(localStorage.getItem("appointments") || "[]");
-      setAppointments(stored);
-    }
-  }, [authenticated]);
+    const stored = JSON.parse(localStorage.getItem("appointments") || "[]");
+    setAppointments(stored);
+  }, []);
 
-  const handleLogin = () => {
-    if (password === ADMIN_PASSWORD) {
-      setAuthenticated(true);
-      setWrongPassword(false);
-    } else {
-      setWrongPassword(true);
-    }
+  const handleLogout = async () => {
+    await fetch("/ms39/api/admin/logout", { method: "POST" });
+    window.location.href = "/ms39/admin/login";
   };
 
   const handleDelete = (index: number) => {
@@ -54,6 +45,7 @@ export default function AdminPage() {
     }
   };
 
+
   const filtered = appointments.filter((a) => {
     const matchesSearch =
       a.fullName.toLowerCase().includes(search.toLowerCase()) ||
@@ -64,113 +56,11 @@ export default function AdminPage() {
 
   const cities = ["All", ...Array.from(new Set(appointments.map((a) => a.city).filter(Boolean)))];
 
-  // ─── Login Screen ────────────────────────────────────────────────────────────
-  if (!authenticated) {
-    return (
-      <main
-        style={{
-          minHeight: "100vh",
-          background: "linear-gradient(135deg, #1a0a0a 0%, #2c1010 50%, #1a0a0a 100%)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: "var(--font-poppins), 'Poppins', sans-serif",
-        }}
-      >
-        <div
-          style={{
-            background: "rgba(255,255,255,0.05)",
-            backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: "20px",
-            padding: "56px 48px",
-            width: "100%",
-            maxWidth: "420px",
-            textAlign: "center",
-            boxShadow: "0 32px 80px rgba(0,0,0,0.5)",
-          }}
-        >
-          <div style={{ fontSize: "48px", marginBottom: "16px" }}>🔐</div>
-          <h1
-            style={{
-              fontSize: "28px",
-              fontWeight: 800,
-              color: "#ffffff",
-              marginBottom: "8px",
-            }}
-          >
-            Admin Panel
-          </h1>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", marginBottom: "36px" }}>
-            Amanat Eye Hospital — Appointments Dashboard
-          </p>
-
-          <input
-            type="password"
-            placeholder="Enter admin password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-            style={{
-              width: "100%",
-              padding: "14px 18px",
-              borderRadius: "10px",
-              border: wrongPassword ? "1px solid #e74c3c" : "1px solid rgba(255,255,255,0.15)",
-              backgroundColor: "rgba(255,255,255,0.08)",
-              color: "#fff",
-              fontSize: "15px",
-              outline: "none",
-              marginBottom: "12px",
-              boxSizing: "border-box",
-            }}
-          />
-
-          {wrongPassword && (
-            <p style={{ color: "#e74c3c", fontSize: "13px", marginBottom: "12px" }}>
-              ✗ Incorrect password. Try again.
-            </p>
-          )}
-
-          <button
-            onClick={handleLogin}
-            style={{
-              width: "100%",
-              padding: "14px",
-              borderRadius: "10px",
-              backgroundColor: "#723838",
-              color: "#fff",
-              fontSize: "16px",
-              fontWeight: 700,
-              border: "none",
-              cursor: "pointer",
-              transition: "background 0.2s",
-              marginTop: "4px",
-            }}
-            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#8a4444")}
-            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#723838")}
-          >
-            Sign In
-          </button>
-
-          <Link
-            href="/ms39"
-            style={{
-              display: "block",
-              marginTop: "24px",
-              color: "rgba(255,255,255,0.4)",
-              fontSize: "13px",
-              textDecoration: "none",
-            }}
-          >
-            ← Back to landing page
-          </Link>
-        </div>
-      </main>
-    );
-  }
-
   // ─── Dashboard ────────────────────────────────────────────────────────────────
+  // Middleware (src/middleware.ts) redirects unauthenticated users to /admin/login
+  // before this component renders, so no login form is needed here.
   return (
+
     <main
       style={{
         minHeight: "100vh",
@@ -213,7 +103,7 @@ export default function AdminPage() {
             ← Landing Page
           </Link>
           <button
-            onClick={() => setAuthenticated(false)}
+            onClick={handleLogout}
             style={{
               backgroundColor: "rgba(255,255,255,0.15)",
               color: "#fff",

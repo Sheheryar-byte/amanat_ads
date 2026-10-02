@@ -11,11 +11,10 @@ env:
   NODE_VERSION: '20.x'
   AZURE_RESOURCE_GROUP: 'rg-amanat-ads'
   AZURE_VMSS_NAME: 'vmss-amanat-ads'
-  APP_DIR: '/opt/amanat_ads'
   APP_RUN_DIR: '/opt/amanat_ads_run'
 
 jobs:
-  # ── JOB 1: Build & Verify ────────────────────────────────────────────────────
+  # ── JOB 1: Build in GitHub Actions (fast, free runners, no VM load) ───────────
   build:
     name: Build Next.js App
     runs-on: ubuntu-latest
@@ -36,15 +35,29 @@ jobs:
       - name: Build Next.js production bundle (standalone)
         run: npm run build
 
-      - name: Verify route files exist
+      - name: Verify build output
         run: |
-          test -f src/app/ms39/page.tsx         && echo "✓ /ms39 route found"
-          test -f src/app/adminforms39/page.tsx  && echo "✓ /adminforms39 route found"
-          test -d .next/standalone               && echo "✓ Standalone output found"
-          echo "Build verification passed."
+          test -d .next/standalone && echo "✓ Standalone output found"
+          test -f src/app/ms39/page.tsx && echo "✓ /ms39 route found"
+          test -f src/app/adminforms39/page.tsx && echo "✓ /adminforms39 route found"
 
-  # ── JOB 2: Deploy to VMSS ────────────────────────────────────────────────────
-  # Loops over every instance — fixes the invalid --instance-id "*" syntax.
+      # Package the standalone bundle into a tarball for upload to the VM
+      - name: Package standalone bundle
+        run: |
+          mkdir -p bundle
+          cp -r .next/standalone/. bundle/
+          cp -r .next/static        bundle/.next/static
+          cp -r public              bundle/public
+          tar -czf standalone-bundle.tar.gz -C bundle .
+
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: standalone-bundle
+          path: standalone-bundle.tar.gz
+          retention-days: 1
+
+  # ── JOB 2: Deploy pre-built bundle to VMSS (no build on VM) ──────────────────
   deploy:
     name: Deploy to VMSS
     runs-on: ubuntu-latest
@@ -52,19 +65,17 @@ jobs:
     environment: production
 
     steps:
+      - name: Download bundle artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: standalone-bundle
+
       - name: Log in to Azure
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-          # Create AZURE_CREDENTIALS with:
-          #   az ad sp create-for-rbac \
-          #     --name "github-amanat-ads" \
-          #     --role Contributor \
-          #     --scopes /subscriptions/<ID>/resourceGroups/rg-amanat-ads \
-          #     --sdk-auth
-          # Paste the full JSON as the AZURE_CREDENTIALS secret in GitHub.
 
-      - name: Get list of all VMSS instance IDs
+      - name: Get VMSS instance IDs
         id: get-instances
         run: |
           IDS=$(az vmss list-instances \
@@ -73,10 +84,30 @@ jobs:
             --query "[].instanceId" \
             --output tsv)
           echo "Instance IDs found: $IDS"
-          # Serialize as space-separated string for the next step
           echo "instance_ids=$(echo $IDS | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
-      - name: Deploy to each VMSS instance
+      - name: Get VMSS Load Balancer NAT ports
+        id: get-nat
+        run: |
+          LB_NAME=$(az network lb list \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --query "[0].name" --output tsv)
+          LB_IP=$(az network public-ip show \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --name "pip-amanat-ads" \
+            --query ipAddress --output tsv)
+          echo "lb_ip=$LB_IP" >> $GITHUB_OUTPUT
+          echo "lb_name=$LB_NAME" >> $GITHUB_OUTPUT
+
+      - name: Write secrets env file
+        run: |
+          # Write env vars to a temp file — uploaded to VM, then deleted
+          cat > env-secrets.txt << 'EOF'
+          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+          ADMIN_SECRET=${{ secrets.ADMIN_SECRET }}
+          EOF
+
+      - name: Deploy to each VMSS instance via Run Command
         env:
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
@@ -87,10 +118,34 @@ jobs:
             exit 1
           fi
 
+          LB_IP="${{ steps.get-nat.outputs.lb_ip }}"
+
           for INSTANCE_ID in $INSTANCE_IDS; do
-            echo "──────────────────────────────────────────"
+            echo "══════════════════════════════════════════"
             echo "Deploying to instance $INSTANCE_ID..."
-            echo "──────────────────────────────────────────"
+            echo "══════════════════════════════════════════"
+
+            # Step A: Upload the pre-built bundle to the VM via run-command + base64
+            # Encode the tarball as base64 so it can be embedded in the shell script
+            BUNDLE_B64=$(base64 -w 0 standalone-bundle.tar.gz)
+
+            az vmss run-command invoke \
+              --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+              --name "${{ env.AZURE_VMSS_NAME }}" \
+              --command-id RunShellScript \
+              --instance-id "$INSTANCE_ID" \
+              --scripts "
+                set -e
+                echo '--- Writing pre-built bundle ---'
+                echo '$BUNDLE_B64' | base64 -d > /tmp/standalone-bundle.tar.gz
+                mkdir -p ${{ env.APP_RUN_DIR }}/.next
+                tar -xzf /tmp/standalone-bundle.tar.gz -C ${{ env.APP_RUN_DIR }}
+                rm /tmp/standalone-bundle.tar.gz
+                echo 'Bundle extracted to ${{ env.APP_RUN_DIR }}'
+                ls -la ${{ env.APP_RUN_DIR }}
+              "
+
+            # Step B: Restart PM2 with the new secrets and reload NGINX
             az vmss run-command invoke \
               --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
               --name "${{ env.AZURE_VMSS_NAME }}" \
@@ -99,65 +154,51 @@ jobs:
               --parameters "ADMIN_PASSWORD=$ADMIN_PASSWORD" "ADMIN_SECRET=$ADMIN_SECRET" \
               --scripts "
                 set -e
-                # Read secrets passed as parameters (positional: \$1 and \$2)
                 export ADMIN_PASSWORD=\"\${1#ADMIN_PASSWORD=}\"
                 export ADMIN_SECRET=\"\${2#ADMIN_SECRET=}\"
 
-                echo '--- Pulling latest code ---'
-                cd ${{ env.APP_DIR }}
-                git pull origin main
+                echo '--- Restarting PM2 with updated secrets ---'
+                # Stop old process cleanly
+                pm2 delete amanat-ads 2>/dev/null || true
 
-                echo '--- Installing dependencies ---'
-                npm ci
-
-                echo '--- Building Next.js standalone ---'
-                npm run build
-
-                echo '--- Copying standalone bundle ---'
-                mkdir -p ${{ env.APP_RUN_DIR }}/.next
-                cp -r .next/standalone/. ${{ env.APP_RUN_DIR }}/
-                cp -r .next/static       ${{ env.APP_RUN_DIR }}/.next/static
-                cp -r public             ${{ env.APP_RUN_DIR }}/public
-
-                echo '--- Restarting PM2 with secrets ---'
-                env PORT=3000 \
-                    ADMIN_PASSWORD=\"\$ADMIN_PASSWORD\" \
-                    ADMIN_SECRET=\"\$ADMIN_SECRET\" \
-                    NODE_ENV=production \
-                    pm2 restart amanat-ads 2>/dev/null || \
-                env PORT=3000 ADMIN_PASSWORD=\"\$ADMIN_PASSWORD\" ADMIN_SECRET=\"\$ADMIN_SECRET\" NODE_ENV=production \
-                    pm2 start ${{ env.APP_RUN_DIR }}/server.js --name amanat-ads
+                # Start fresh with env vars
+                PORT=3000 \
+                ADMIN_PASSWORD=\"\$ADMIN_PASSWORD\" \
+                ADMIN_SECRET=\"\$ADMIN_SECRET\" \
+                NODE_ENV=production \
+                pm2 start ${{ env.APP_RUN_DIR }}/server.js --name amanat-ads
                 pm2 save
 
                 echo '--- Reloading NGINX ---'
                 nginx -t && systemctl reload nginx
 
-                echo '--- Instance $INSTANCE_ID deploy complete ---'
+                echo '--- PM2 status ---'
                 pm2 status amanat-ads
               "
+
             echo "Instance $INSTANCE_ID: done ✓"
           done
 
       - name: Wait for app to stabilize
-        run: sleep 20
+        run: sleep 15
 
       - name: Health check — verify /ms39 is live
         run: |
-          LB_IP=$(az network public-ip show \
-            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
-            --name "pip-amanat-ads" \
-            --query ipAddress \
-            --output tsv)
+          LB_IP="${{ steps.get-nat.outputs.lb_ip }}"
           echo "Load Balancer IP: $LB_IP"
 
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://$LB_IP/ms39")
-          echo "HTTP status for /ms39: $STATUS"
+          for i in 1 2 3; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://$LB_IP/ms39")
+            echo "Attempt $i — HTTP status for /ms39: $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "✓ Deployment successful — /ms39 is live at http://$LB_IP/ms39"
+              exit 0
+            fi
+            sleep 10
+          done
 
-          if [ "$STATUS" != "200" ]; then
-            echo "ERROR: /ms39 returned HTTP $STATUS. Check PM2 logs on the VM."
-            exit 1
-          fi
-          echo "✓ Deployment successful — /ms39 is live at http://$LB_IP/ms39"
+          echo "ERROR: /ms39 did not return 200. Check PM2 logs on the VM."
+          exit 1
 
       - name: Azure logout
         if: always()

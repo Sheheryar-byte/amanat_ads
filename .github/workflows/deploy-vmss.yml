@@ -1,10 +1,8 @@
 name: Deploy to Azure VMSS
 
-# Runs on every push to main. Does NOT affect the AmanatEye App Service (Canada Central).
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 env:
@@ -12,19 +10,18 @@ env:
   AZURE_RESOURCE_GROUP: 'rg-amanat-ads'
   AZURE_VMSS_NAME: 'vmss-amanat-ads'
   APP_RUN_DIR: '/opt/amanat_ads_run'
+  STORAGE_CONTAINER: 'deployments'
 
 jobs:
-  # ── JOB 1: Build in GitHub Actions (fast, free runners, no VM load) ───────────
+  # ── JOB 1: Build in GitHub Actions (fast, no VM load) ────────────────────────
   build:
     name: Build Next.js App
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -39,25 +36,22 @@ jobs:
         run: |
           test -d .next/standalone && echo "✓ Standalone output found"
           test -f src/app/ms39/page.tsx && echo "✓ /ms39 route found"
-          test -f src/app/adminforms39/page.tsx && echo "✓ /adminforms39 route found"
 
-      # Package the standalone bundle into a tarball for upload to the VM
-      - name: Package standalone bundle
+      - name: Package standalone bundle into tarball
         run: |
-          mkdir -p bundle
-          cp -r .next/standalone/. bundle/
-          cp -r .next/static        bundle/.next/static
-          cp -r public              bundle/public
-          tar -czf standalone-bundle.tar.gz -C bundle .
+          mkdir -p _bundle
+          cp -r .next/standalone/. _bundle/
+          cp -r .next/static       _bundle/.next/static
+          cp -r public             _bundle/public
+          tar -czf bundle.tar.gz -C _bundle .
 
-      - name: Upload bundle artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: standalone-bundle
-          path: standalone-bundle.tar.gz
+          path: bundle.tar.gz
           retention-days: 1
 
-  # ── JOB 2: Deploy pre-built bundle to VMSS (no build on VM) ──────────────────
+  # ── JOB 2: Upload bundle to Azure Blob, deploy via short URL ─────────────────
   deploy:
     name: Deploy to VMSS
     runs-on: ubuntu-latest
@@ -75,6 +69,73 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      # ── Upload bundle to Azure Blob Storage and get a SAS download URL ─────
+      - name: Upload bundle to Azure Blob Storage
+        id: upload
+        run: |
+          # Find existing storage account in resource group, or create one
+          SA=$(az storage account list \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --query "[0].name" --output tsv 2>/dev/null || true)
+
+          if [ -z "$SA" ]; then
+            # Storage account names must be 3-24 chars, lowercase alphanumeric only
+            SA="stgamanat$(date +%s | tail -c 6)"
+            echo "Creating storage account: $SA"
+            az storage account create \
+              --name "$SA" \
+              --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+              --sku Standard_LRS \
+              --kind StorageV2
+          else
+            echo "Using existing storage account: $SA"
+          fi
+
+          # Get account key for operations
+          KEY=$(az storage account keys list \
+            --account-name "$SA" \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --query "[0].value" --output tsv)
+
+          # Create container (idempotent — won't fail if already exists)
+          az storage container create \
+            --name "${{ env.STORAGE_CONTAINER }}" \
+            --account-name "$SA" \
+            --account-key "$KEY" \
+            --output none
+
+          # Upload the tarball
+          BLOB_NAME="bundle-${{ github.sha }}.tar.gz"
+          az storage blob upload \
+            --account-name "$SA" \
+            --account-key "$KEY" \
+            --container-name "${{ env.STORAGE_CONTAINER }}" \
+            --name "$BLOB_NAME" \
+            --file bundle.tar.gz \
+            --overwrite \
+            --output none
+
+          echo "Uploaded: $BLOB_NAME"
+
+          # Generate SAS URL valid for 2 hours — VM will curl this
+          EXPIRY=$(date -u -d "+2 hours" "+%Y-%m-%dT%H:%MZ")
+          SAS_URL=$(az storage blob generate-sas \
+            --account-name "$SA" \
+            --account-key "$KEY" \
+            --container-name "${{ env.STORAGE_CONTAINER }}" \
+            --name "$BLOB_NAME" \
+            --permissions r \
+            --expiry "$EXPIRY" \
+            --full-uri \
+            --output tsv)
+
+          # Base64-encode the URL so it's safe to pass as a run-command parameter
+          # (SAS URLs contain & and = which can cause shell parsing issues)
+          SAS_URL_B64=$(echo -n "$SAS_URL" | base64 -w 0)
+          echo "sas_url_b64=$SAS_URL_B64" >> $GITHUB_OUTPUT
+          echo "Bundle SAS URL generated (expires in 2 hours)."
+
+      # ── Get VMSS instance IDs ───────────────────────────────────────────────
       - name: Get VMSS instance IDs
         id: get-instances
         run: |
@@ -83,34 +144,15 @@ jobs:
             --name "${{ env.AZURE_VMSS_NAME }}" \
             --query "[].instanceId" \
             --output tsv)
-          echo "Instance IDs found: $IDS"
+          echo "Instance IDs: $IDS"
           echo "instance_ids=$(echo $IDS | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
-      - name: Get VMSS Load Balancer NAT ports
-        id: get-nat
-        run: |
-          LB_NAME=$(az network lb list \
-            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
-            --query "[0].name" --output tsv)
-          LB_IP=$(az network public-ip show \
-            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
-            --name "pip-amanat-ads" \
-            --query ipAddress --output tsv)
-          echo "lb_ip=$LB_IP" >> $GITHUB_OUTPUT
-          echo "lb_name=$LB_NAME" >> $GITHUB_OUTPUT
-
-      - name: Write secrets env file
-        run: |
-          # Write env vars to a temp file — uploaded to VM, then deleted
-          cat > env-secrets.txt << 'EOF'
-          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
-          ADMIN_SECRET=${{ secrets.ADMIN_SECRET }}
-          EOF
-
-      - name: Deploy to each VMSS instance via Run Command
+      # ── Deploy to each instance: download bundle from blob, restart PM2 ────
+      - name: Deploy to each VMSS instance
         env:
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
+          SAS_URL_B64: ${{ steps.upload.outputs.sas_url_b64 }}
         run: |
           INSTANCE_IDS="${{ steps.get-instances.outputs.instance_ids }}"
           if [ -z "$INSTANCE_IDS" ]; then
@@ -118,78 +160,96 @@ jobs:
             exit 1
           fi
 
-          LB_IP="${{ steps.get-nat.outputs.lb_ip }}"
-
           for INSTANCE_ID in $INSTANCE_IDS; do
             echo "══════════════════════════════════════════"
             echo "Deploying to instance $INSTANCE_ID..."
             echo "══════════════════════════════════════════"
 
-            # Step A: Upload the pre-built bundle to the VM via run-command + base64
-            # Encode the tarball as base64 so it can be embedded in the shell script
-            BUNDLE_B64=$(base64 -w 0 standalone-bundle.tar.gz)
-
             az vmss run-command invoke \
               --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
               --name "${{ env.AZURE_VMSS_NAME }}" \
               --command-id RunShellScript \
               --instance-id "$INSTANCE_ID" \
-              --scripts "
+              --parameters \
+                "ADMIN_PASSWORD=$ADMIN_PASSWORD" \
+                "ADMIN_SECRET=$ADMIN_SECRET" \
+                "SAS_URL_B64=$SAS_URL_B64" \
+              --scripts '
                 set -e
-                echo '--- Writing pre-built bundle ---'
-                echo '$BUNDLE_B64' | base64 -d > /tmp/standalone-bundle.tar.gz
-                mkdir -p ${{ env.APP_RUN_DIR }}/.next
-                tar -xzf /tmp/standalone-bundle.tar.gz -C ${{ env.APP_RUN_DIR }}
-                rm /tmp/standalone-bundle.tar.gz
-                echo 'Bundle extracted to ${{ env.APP_RUN_DIR }}'
-                ls -la ${{ env.APP_RUN_DIR }}
-              "
 
-            # Step B: Restart PM2 with the new secrets and reload NGINX
-            az vmss run-command invoke \
-              --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
-              --name "${{ env.AZURE_VMSS_NAME }}" \
-              --command-id RunShellScript \
-              --instance-id "$INSTANCE_ID" \
-              --parameters "ADMIN_PASSWORD=$ADMIN_PASSWORD" "ADMIN_SECRET=$ADMIN_SECRET" \
-              --scripts "
-                set -e
-                export ADMIN_PASSWORD=\"\${1#ADMIN_PASSWORD=}\"
-                export ADMIN_SECRET=\"\${2#ADMIN_SECRET=}\"
+                # Extract parameters ($1=ADMIN_PASSWORD=..., $2=ADMIN_SECRET=..., $3=SAS_URL_B64=...)
+                ADMIN_PASSWORD="${1#ADMIN_PASSWORD=}"
+                ADMIN_SECRET="${2#ADMIN_SECRET=}"
+                SAS_URL_B64="${3#SAS_URL_B64=}"
 
-                echo '--- Restarting PM2 with updated secrets ---'
-                # Stop old process cleanly
+                # Decode the SAS URL (was base64-encoded to safely pass special chars)
+                SAS_URL=$(echo "$SAS_URL_B64" | base64 -d)
+
+                echo "--- Downloading pre-built bundle from Azure Blob Storage ---"
+                curl -sL --fail -o /tmp/bundle.tar.gz "$SAS_URL"
+                echo "Download complete: $(du -sh /tmp/bundle.tar.gz | cut -f1)"
+
+                echo "--- Extracting bundle ---"
+                mkdir -p /opt/amanat_ads_run/.next
+                tar -xzf /tmp/bundle.tar.gz -C /opt/amanat_ads_run
+                rm -f /tmp/bundle.tar.gz
+                echo "Extraction complete."
+
+                echo "--- Restarting PM2 with updated app ---"
                 pm2 delete amanat-ads 2>/dev/null || true
-
-                # Start fresh with env vars
                 PORT=3000 \
-                ADMIN_PASSWORD=\"\$ADMIN_PASSWORD\" \
-                ADMIN_SECRET=\"\$ADMIN_SECRET\" \
-                NODE_ENV=production \
-                pm2 start ${{ env.APP_RUN_DIR }}/server.js --name amanat-ads
+                  ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+                  ADMIN_SECRET="$ADMIN_SECRET" \
+                  NODE_ENV=production \
+                  pm2 start /opt/amanat_ads_run/server.js --name amanat-ads
                 pm2 save
 
-                echo '--- Reloading NGINX ---'
+                echo "--- Reloading NGINX ---"
                 nginx -t && systemctl reload nginx
 
-                echo '--- PM2 status ---'
+                echo "--- Status ---"
                 pm2 status amanat-ads
-              "
+                echo "Instance deploy complete!"
+              '
 
             echo "Instance $INSTANCE_ID: done ✓"
           done
+
+      # ── Clean up old blobs to avoid storage costs ───────────────────────────
+      - name: Clean up old deployment blobs
+        if: always()
+        run: |
+          SA=$(az storage account list \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --query "[0].name" --output tsv 2>/dev/null || true)
+          if [ -z "$SA" ]; then exit 0; fi
+          KEY=$(az storage account keys list \
+            --account-name "$SA" \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --query "[0].value" --output tsv)
+          # Delete blobs older than 4 hours
+          CUTOFF=$(date -u -d "-4 hours" "+%Y-%m-%dT%H:%MZ")
+          az storage blob delete-batch \
+            --account-name "$SA" \
+            --account-key "$KEY" \
+            --source "${{ env.STORAGE_CONTAINER }}" \
+            --if-unmodified-since "$CUTOFF" \
+            --output none 2>/dev/null || true
 
       - name: Wait for app to stabilize
         run: sleep 15
 
       - name: Health check — verify /ms39 is live
         run: |
-          LB_IP="${{ steps.get-nat.outputs.lb_ip }}"
+          LB_IP=$(az network public-ip show \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --name "pip-amanat-ads" \
+            --query ipAddress --output tsv)
           echo "Load Balancer IP: $LB_IP"
 
           for i in 1 2 3; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://$LB_IP/ms39")
-            echo "Attempt $i — HTTP status for /ms39: $STATUS"
+            echo "Attempt $i — HTTP $STATUS"
             if [ "$STATUS" = "200" ]; then
               echo "✓ Deployment successful — /ms39 is live at http://$LB_IP/ms39"
               exit 0

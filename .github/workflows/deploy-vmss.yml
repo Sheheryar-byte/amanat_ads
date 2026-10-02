@@ -165,54 +165,71 @@ jobs:
             echo "Deploying to instance $INSTANCE_ID..."
             echo "══════════════════════════════════════════"
 
-            az vmss run-command invoke \
-              --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
-              --name "${{ env.AZURE_VMSS_NAME }}" \
-              --command-id RunShellScript \
-              --instance-id "$INSTANCE_ID" \
-              --parameters \
-                "ADMIN_PASSWORD=$ADMIN_PASSWORD" \
-                "ADMIN_SECRET=$ADMIN_SECRET" \
-                "SAS_URL_B64=$SAS_URL_B64" \
-              --scripts '
-                set -e
+            # Retry up to 5 times in case VM is still locked from a previous run-command
+            for ATTEMPT in 1 2 3 4 5; do
+              echo "Attempt $ATTEMPT of 5..."
+              EXIT_CODE=0
+              az vmss run-command invoke \
+                --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+                --name "${{ env.AZURE_VMSS_NAME }}" \
+                --command-id RunShellScript \
+                --instance-id "$INSTANCE_ID" \
+                --parameters \
+                  "ADMIN_PASSWORD=$ADMIN_PASSWORD" \
+                  "ADMIN_SECRET=$ADMIN_SECRET" \
+                  "SAS_URL_B64=$SAS_URL_B64" \
+                --scripts '
+                  set -e
 
-                # Extract parameters ($1=ADMIN_PASSWORD=..., $2=ADMIN_SECRET=..., $3=SAS_URL_B64=...)
-                ADMIN_PASSWORD="${1#ADMIN_PASSWORD=}"
-                ADMIN_SECRET="${2#ADMIN_SECRET=}"
-                SAS_URL_B64="${3#SAS_URL_B64=}"
+                  # Extract parameters
+                  ADMIN_PASSWORD="${1#ADMIN_PASSWORD=}"
+                  ADMIN_SECRET="${2#ADMIN_SECRET=}"
+                  SAS_URL_B64="${3#SAS_URL_B64=}"
 
-                # Decode the SAS URL (was base64-encoded to safely pass special chars)
-                SAS_URL=$(echo "$SAS_URL_B64" | base64 -d)
+                  # Decode the SAS URL (was base64-encoded to safely pass special chars)
+                  SAS_URL=$(echo "$SAS_URL_B64" | base64 -d)
 
-                echo "--- Downloading pre-built bundle from Azure Blob Storage ---"
-                curl -sL --fail -o /tmp/bundle.tar.gz "$SAS_URL"
-                echo "Download complete: $(du -sh /tmp/bundle.tar.gz | cut -f1)"
+                  echo "--- Downloading pre-built bundle from Azure Blob Storage ---"
+                  curl -sL --fail -o /tmp/bundle.tar.gz "$SAS_URL"
+                  echo "Download complete: $(du -sh /tmp/bundle.tar.gz | cut -f1)"
 
-                echo "--- Extracting bundle ---"
-                mkdir -p /opt/amanat_ads_run/.next
-                tar -xzf /tmp/bundle.tar.gz -C /opt/amanat_ads_run
-                rm -f /tmp/bundle.tar.gz
-                echo "Extraction complete."
+                  echo "--- Extracting bundle ---"
+                  mkdir -p /opt/amanat_ads_run/.next
+                  tar -xzf /tmp/bundle.tar.gz -C /opt/amanat_ads_run
+                  rm -f /tmp/bundle.tar.gz
+                  echo "Extraction complete."
 
-                echo "--- Restarting PM2 with updated app ---"
-                pm2 delete amanat-ads 2>/dev/null || true
-                PORT=3000 \
-                  ADMIN_PASSWORD="$ADMIN_PASSWORD" \
-                  ADMIN_SECRET="$ADMIN_SECRET" \
-                  NODE_ENV=production \
-                  pm2 start /opt/amanat_ads_run/server.js --name amanat-ads
-                pm2 save
+                  echo "--- Restarting PM2 with updated app ---"
+                  pm2 delete amanat-ads 2>/dev/null || true
+                  PORT=3000 \
+                    ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+                    ADMIN_SECRET="$ADMIN_SECRET" \
+                    NODE_ENV=production \
+                    pm2 start /opt/amanat_ads_run/server.js --name amanat-ads
+                  pm2 save
 
-                echo "--- Reloading NGINX ---"
-                nginx -t && systemctl reload nginx
+                  echo "--- Reloading NGINX ---"
+                  nginx -t && systemctl reload nginx
 
-                echo "--- Status ---"
-                pm2 status amanat-ads
-                echo "Instance deploy complete!"
-              '
+                  echo "--- Status ---"
+                  pm2 status amanat-ads
+                  echo "Instance deploy complete!"
+                ' || EXIT_CODE=$?
 
-            echo "Instance $INSTANCE_ID: done ✓"
+              if [ $EXIT_CODE -eq 0 ]; then
+                echo "Instance $INSTANCE_ID: done ✓"
+                break
+              fi
+
+              echo "Run command returned exit code $EXIT_CODE."
+              if [ $ATTEMPT -lt 5 ]; then
+                echo "VM may still be locked. Waiting 60s before retry..."
+                sleep 60
+              else
+                echo "ERROR: Failed after 5 attempts on instance $INSTANCE_ID."
+                exit 1
+              fi
+            done
           done
 
       # ── Clean up old blobs to avoid storage costs ───────────────────────────

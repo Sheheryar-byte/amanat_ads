@@ -97,7 +97,7 @@ export default function Home() {
             <div className="hero-device-container" style={{ flex: "0 0 auto", width: "clamp(380px, 44vw, 560px)", position: "relative", marginBottom: "-140px" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/assets/device.png"
+                src="/ms39/assets/device.png"
                 alt="MS-39 Diagnostic Device"
                 className="hero-device-image"
                 style={{ objectFit: "contain", width: "100%", height: "auto", filter: "drop-shadow(0 10px 40px rgba(0,0,0,0.5))" }}

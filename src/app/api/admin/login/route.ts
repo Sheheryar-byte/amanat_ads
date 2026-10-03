@@ -21,11 +21,13 @@ export async function POST(req: NextRequest) {
   // Password correct — set an HttpOnly session cookie.
   // HttpOnly means JavaScript in the browser cannot read this cookie,
   // preventing XSS attacks from stealing the session.
+  const isHttps = req.nextUrl.protocol === "https:" || req.headers.get("x-forwarded-proto") === "https";
+  
   const response = NextResponse.json({ success: true });
   response.cookies.set("admin_session", adminSecret, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production" && isHttps,
+    sameSite: "lax",
     maxAge: 60 * 60 * 8, // 8 hours
     path: "/ms39",
   });

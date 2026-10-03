@@ -218,7 +218,7 @@ export default function BookAppointment() {
           height: "70vh",
           width: "100%",
           zIndex: 0,
-          background: "url('/assets/background.jpg') center/cover no-repeat",
+          background: "url('/ms39/assets/background.jpg') center/cover no-repeat",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

@@ -356,7 +356,9 @@ body {
   }
 
   .hero-device-container {
-    display: none !important;
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 24px !important;
   }
 
   .hero-content {

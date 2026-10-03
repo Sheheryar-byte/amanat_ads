@@ -49,7 +49,7 @@ export default function Home() {
         >
           <div style={{ width: 60, height: 60, position: "relative", pointerEvents: "auto" }}>
             <Image
-              src="/assets/headerlogo.png"
+              src="/ms39/assets/headerlogo.png"
               alt="Amanat Eye Hospital Logo"
               fill
               style={{ objectFit: "contain" }}
@@ -189,7 +189,7 @@ export default function Home() {
               }}
             >
               <Image
-                src="/assets/doc.jpeg"
+                src="/ms39/assets/doc.jpeg"
                 alt="Eye specialist doctor"
                 width={340}
                 height={340}
@@ -238,7 +238,7 @@ export default function Home() {
           {/* Journey Image */}
           <div className="interactive-image-container" style={{ maxWidth: 860, margin: "0 auto", width: "100%", position: "relative", backgroundColor: "#ffffff", borderRadius: 12, overflow: "hidden" }}>
             <Image
-              src="/assets/con_jon.png"
+              src="/ms39/assets/con_jon.png"
               alt="Consultation journey steps 1 through 5"
               width={1200}
               height={675}
@@ -323,7 +323,7 @@ export default function Home() {
                   }}
                 >
                   <Image
-                    src="/assets/dev2.png"
+                    src="/ms39/assets/dev2.png"
                     alt="Patient undergoing eye examination"
                     width={420}
                     height={300}
@@ -347,7 +347,7 @@ export default function Home() {
                   }}
                 >
                   <Image
-                    src="/assets/dev3.jpg"
+                    src="/ms39/assets/dev3.jpg"
                     alt="MS-39 device scan readout"
                     width={340}
                     height={200}
@@ -373,7 +373,7 @@ export default function Home() {
               style={{ flex: "1 1 auto", width: "clamp(320px, 50vw, 640px)" }}
             >
               <Image
-                src="/assets/amanat_pic.jpg"
+                src="/ms39/assets/amanat_pic.jpg"
                 alt="Amanat Eye Hospital building"
                 width={640}
                 height={480}
@@ -517,7 +517,7 @@ export default function Home() {
             <div>
               <div style={{ width: 56, height: 56, position: "relative", marginBottom: 16 }}>
                 <Image
-                  src="/assets/footerlogo.png"
+                  src="/ms39/assets/footerlogo.png"
                   alt="Amanat Eye Hospital Logo"
                   fill
                   style={{ objectFit: "contain" }}

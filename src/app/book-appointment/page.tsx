@@ -30,13 +30,19 @@ export default function BookAppointment() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const entry = { ...formData, submittedAt: new Date().toISOString() };
     
-    // Save to localStorage (Temporary - see note about database)
-    const existing = JSON.parse(localStorage.getItem("appointments") || "[]");
-    existing.push(entry);
-    localStorage.setItem("appointments", JSON.stringify(existing));
+    // Save to Database (MongoDB)
+    try {
+      await fetch('/ms39/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry),
+      });
+    } catch (e) {
+      console.error("Failed to save to database", e);
+    }
     
     // Build WhatsApp Message
     const text = `*New Appointment Request*

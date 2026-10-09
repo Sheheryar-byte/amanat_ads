@@ -152,6 +152,7 @@ jobs:
         env:
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
           SAS_URL_B64: ${{ steps.upload.outputs.sas_url_b64 }}
         run: |
           INSTANCE_IDS="${{ steps.get-instances.outputs.instance_ids }}"
@@ -177,6 +178,7 @@ jobs:
                 --parameters \
                   "ADMIN_PASSWORD=$ADMIN_PASSWORD" \
                   "ADMIN_SECRET=$ADMIN_SECRET" \
+                  "MONGODB_URI=$MONGODB_URI" \
                   "SAS_URL_B64=$SAS_URL_B64" \
                 --scripts '
                   set -e
@@ -184,7 +186,8 @@ jobs:
                   # Extract parameters
                   ADMIN_PASSWORD="${1#ADMIN_PASSWORD=}"
                   ADMIN_SECRET="${2#ADMIN_SECRET=}"
-                  SAS_URL_B64="${3#SAS_URL_B64=}"
+                  MONGODB_URI="${3#MONGODB_URI=}"
+                  SAS_URL_B64="${4#SAS_URL_B64=}"
 
                   # Decode the SAS URL (was base64-encoded to safely pass special chars)
                   SAS_URL=$(echo "$SAS_URL_B64" | base64 -d)
@@ -204,6 +207,7 @@ jobs:
                   PORT=3000 \
                     ADMIN_PASSWORD="$ADMIN_PASSWORD" \
                     ADMIN_SECRET="$ADMIN_SECRET" \
+                    MONGODB_URI="$MONGODB_URI" \
                     NODE_ENV=production \
                     pm2 start /opt/amanat_ads_run/server.js --name amanat-ads
                   pm2 save

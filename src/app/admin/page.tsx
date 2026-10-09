@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 interface Appointment {
+  _id?: string;
   fullName: string;
   mobileNumber: string;
   city: string;
@@ -23,8 +24,14 @@ export default function AdminPage() {
   // Middleware (src/middleware.ts) already verified the session cookie
   // before this page renders — no client-side password check needed.
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("appointments") || "[]");
-    setAppointments(stored);
+    fetch('/ms39/api/appointments')
+      .then(res => res.json())
+      .then(data => {
+        if (data.appointments) {
+          setAppointments(data.appointments);
+        }
+      })
+      .catch(err => console.error("Failed to load appointments", err));
   }, []);
 
   const handleLogout = async () => {
@@ -32,16 +39,18 @@ export default function AdminPage() {
     window.location.href = "/ms39/admin/login";
   };
 
-  const handleDelete = (index: number) => {
-    const updated = appointments.filter((_, i) => i !== index);
-    setAppointments(updated);
-    localStorage.setItem("appointments", JSON.stringify(updated));
+  const handleDelete = async (id?: string) => {
+    if (id) {
+      await fetch(`/ms39/api/appointments/${id}`, { method: 'DELETE' });
+      const updated = appointments.filter((a) => a._id !== id);
+      setAppointments(updated);
+    }
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     if (confirm("Are you sure you want to delete ALL appointments?")) {
+      await fetch('/ms39/api/appointments', { method: 'DELETE' });
       setAppointments([]);
-      localStorage.removeItem("appointments");
     }
   };
 
@@ -329,7 +338,7 @@ export default function AdminPage() {
 
                 {/* Delete */}
                 <button
-                  onClick={() => handleDelete(i)}
+                  onClick={() => handleDelete(apt._id)}
                   style={{
                     backgroundColor: "#fff5f5",
                     border: "1px solid #fca5a5",

@@ -167,40 +167,44 @@ jobs:
             echo "══════════════════════════════════════════"
 
             # Retry up to 5 times in case VM is still locked from a previous run-command
+            # Base64 encode all parameters to prevent shell parsing errors with special chars like &
+            ADMIN_PASSWORD_B64=$(echo -n "$ADMIN_PASSWORD" | base64 -w 0)
+            ADMIN_SECRET_B64=$(echo -n "$ADMIN_SECRET" | base64 -w 0)
+            MONGODB_URI_B64=$(echo -n "$MONGODB_URI" | base64 -w 0)
+
             for ATTEMPT in 1 2 3 4 5; do
               echo "Attempt $ATTEMPT of 5..."
-              EXIT_CODE=0
-              az vmss run-command invoke \
+              
+              # Capture JSON output from Azure to verify script success
+              OUTPUT=$(az vmss run-command invoke \
                 --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
                 --name "${{ env.AZURE_VMSS_NAME }}" \
                 --command-id RunShellScript \
                 --instance-id "$INSTANCE_ID" \
                 --parameters \
-                  "ADMIN_PASSWORD=$ADMIN_PASSWORD" \
-                  "ADMIN_SECRET=$ADMIN_SECRET" \
-                  "MONGODB_URI=$MONGODB_URI" \
+                  "ADMIN_PASSWORD_B64=$ADMIN_PASSWORD_B64" \
+                  "ADMIN_SECRET_B64=$ADMIN_SECRET_B64" \
+                  "MONGODB_URI_B64=$MONGODB_URI_B64" \
                   "SAS_URL_B64=$SAS_URL_B64" \
                 --scripts '
                   set -e
-
-                  # Extract parameters
-                  ADMIN_PASSWORD="${1#ADMIN_PASSWORD=}"
-                  ADMIN_SECRET="${2#ADMIN_SECRET=}"
-                  MONGODB_URI="${3#MONGODB_URI=}"
-                  SAS_URL_B64="${4#SAS_URL_B64=}"
-
-                  # Decode the SAS URL (was base64-encoded to safely pass special chars)
-                  SAS_URL=$(echo "$SAS_URL_B64" | base64 -d)
+                  
+                  # Decode parameters
+                  ADMIN_PASSWORD=$(echo "${1#ADMIN_PASSWORD_B64=}" | base64 -d)
+                  ADMIN_SECRET=$(echo "${2#ADMIN_SECRET_B64=}" | base64 -d)
+                  MONGODB_URI=$(echo "${3#MONGODB_URI_B64=}" | base64 -d)
+                  SAS_URL=$(echo "${4#SAS_URL_B64=}" | base64 -d)
 
                   echo "--- Downloading pre-built bundle from Azure Blob Storage ---"
                   curl -sL --fail -o /tmp/bundle.tar.gz "$SAS_URL"
-                  echo "Download complete: $(du -sh /tmp/bundle.tar.gz | cut -f1)"
+
+                  echo "--- Clearing old build to free up disk space ---"
+                  rm -rf /opt/amanat_ads_run/.next || true
 
                   echo "--- Extracting bundle ---"
                   mkdir -p /opt/amanat_ads_run/.next
                   tar -xzf /tmp/bundle.tar.gz -C /opt/amanat_ads_run
                   rm -f /tmp/bundle.tar.gz
-                  echo "Extraction complete."
 
                   echo "--- Restarting PM2 with updated app ---"
                   pm2 delete amanat-ads 2>/dev/null || true
@@ -218,16 +222,20 @@ jobs:
                   echo "--- Status ---"
                   pm2 status amanat-ads
                   echo "Instance deploy complete!"
-                ' || EXIT_CODE=$?
+                ')
 
-              if [ $EXIT_CODE -eq 0 ]; then
+              # Check if the output contains our success message
+              if echo "$OUTPUT" | grep -q "Instance deploy complete!"; then
                 echo "Instance $INSTANCE_ID: done ✓"
+                echo "$OUTPUT"
                 break
               fi
 
-              echo "Run command returned exit code $EXIT_CODE."
+              echo "Deployment script failed or VM locked. Output:"
+              echo "$OUTPUT"
+              
               if [ $ATTEMPT -lt 5 ]; then
-                echo "VM may still be locked. Waiting 60s before retry..."
+                echo "Waiting 60s before retry..."
                 sleep 60
               else
                 echo "ERROR: Failed after 5 attempts on instance $INSTANCE_ID."

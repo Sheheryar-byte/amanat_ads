@@ -49,13 +49,7 @@ export default function Home() {
           }}
         >
           <div className="header-logo-container" style={{ position: "relative", pointerEvents: "auto" }}>
-            <Image
-              src="/ms39/assets/whiteamanat.png"
-              alt="Amanat Eye Hospital Logo"
-              fill
-              style={{ objectFit: "contain" }}
-              priority
-            />
+            <img src="/ms39/assets/whiteamanat.png" alt="Amanat Eye Hospital Logo" style={{ width: "100%", height: "100%", objectFit: "contain", position: "absolute", inset: 0 }} />
           </div>
           <div className="header-buttons-container" style={{ pointerEvents: "auto", alignItems: "center" }}>
             <a
@@ -238,7 +232,7 @@ export default function Home() {
                 overflow: "hidden",
               }}
             >
-              <Image
+              <img
                 src="/ms39/assets/doc.jpeg"
                 alt="Eye specialist doctor"
                 width={340}
@@ -287,7 +281,7 @@ export default function Home() {
 
           {/* Journey Image */}
           <div className="interactive-image-container" style={{ maxWidth: 860, margin: "0 auto", width: "100%", position: "relative", backgroundColor: "#ffffff", borderRadius: 12, overflow: "hidden" }}>
-            <Image
+            <img
               src="/ms39/assets/con_jon.png"
               alt="Consultation journey steps 1 through 5"
               width={1200}
@@ -372,7 +366,7 @@ export default function Home() {
                     zIndex: 1,
                   }}
                 >
-                  <Image
+                  <img
                     src="/ms39/assets/dev2.png"
                     alt="Patient undergoing eye examination"
                     width={420}
@@ -396,7 +390,7 @@ export default function Home() {
                     zIndex: 2,
                   }}
                 >
-                  <Image
+                  <img
                     src="/ms39/assets/dev3.jpg"
                     alt="MS-39 device scan readout"
                     width={340}
@@ -422,7 +416,7 @@ export default function Home() {
               className="hospital-image-container interactive-image-container"
               style={{ flex: "1 1 auto", width: "clamp(320px, 50vw, 640px)" }}
             >
-              <Image
+              <img
                 src="/ms39/assets/amanat_pic.jpg"
                 alt="Amanat Eye Hospital building"
                 width={640}
@@ -568,12 +562,7 @@ export default function Home() {
             {/* About Column */}
             <div style={{ display: "flex", flexDirection: "column" }}>
               <div style={{ width: 100, height: 100, position: "relative", marginBottom: 20 }}>
-                <Image
-                  src="/ms39/assets/footerlogo.png"
-                  alt="Amanat Eye Hospital Logo"
-                  fill
-                  style={{ objectFit: "contain", objectPosition: "left" }}
-                />
+                <img src="/ms39/assets/footerlogo.png" alt="Amanat Eye Hospital Logo" style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "left", position: "absolute", inset: 0 }} />
               </div>
               <h4
                 style={{

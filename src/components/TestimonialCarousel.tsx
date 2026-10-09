@@ -150,7 +150,7 @@ export default function TestimonialCarousel() {
             >
               {/* Background Image */}
               <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
-                <Image src={t.image} alt={t.name} fill style={{ objectFit: "cover" }} />
+                <img src={t.image} alt={t.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               </div>
               
               {/* Gradient Overlay */}

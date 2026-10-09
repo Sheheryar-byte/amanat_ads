@@ -270,13 +270,7 @@ export default function BookAppointment() {
         >
           <Link href="/ms39">
             <div className="header-logo-container" style={{ position: "relative" }}>
-              <Image
-                src="/ms39/assets/whiteamanat.png"
-                alt="Amanat Eye Hospital Logo"
-                fill
-                style={{ objectFit: "contain" }}
-                priority
-              />
+              <img src="/ms39/assets/whiteamanat.png" alt="Amanat Eye Hospital Logo" style={{ width: "100%", height: "100%", objectFit: "contain", position: "absolute", inset: 0 }} />
             </div>
           </Link>
           <div className="header-buttons-container" style={{ pointerEvents: "auto", alignItems: "center" }}>
@@ -510,12 +504,7 @@ export default function BookAppointment() {
             {/* About Column */}
             <div style={{ display: "flex", flexDirection: "column" }}>
               <div style={{ width: 100, height: 100, position: "relative", marginBottom: 20 }}>
-                <Image
-                  src="/ms39/assets/footerlogo.png"
-                  alt="Amanat Eye Hospital Logo"
-                  fill
-                  style={{ objectFit: "contain", objectPosition: "left" }}
-                />
+                <img src="/ms39/assets/footerlogo.png" alt="Amanat Eye Hospital Logo" style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "left", position: "absolute", inset: 0 }} />
               </div>
               <h4
                 style={{

@@ -32,9 +32,27 @@ export default function BookAppointment() {
 
   const handleSubmit = () => {
     const entry = { ...formData, submittedAt: new Date().toISOString() };
+    
+    // Save to localStorage (Temporary - see note about database)
     const existing = JSON.parse(localStorage.getItem("appointments") || "[]");
     existing.push(entry);
     localStorage.setItem("appointments", JSON.stringify(existing));
+    
+    // Build WhatsApp Message
+    const text = `*New Appointment Request*
+*Name:* ${formData.fullName}
+*Mobile:* ${formData.mobileNumber}
+*City:* ${formData.city}
+*Age:* ${formData.age}
+*Topics:* ${formData.topics.join(", ") || "None"}
+*Contact Method:* ${formData.contactMethod.join(", ") || "None"}
+*Preferred Time:* ${formData.preferredTime.join(", ") || "None"}
+*Notes:* ${formData.notes || "None"}`;
+
+    // Redirect to WhatsApp
+    const whatsappUrl = `https://wa.me/923000545879?text=${encodeURIComponent(text)}`;
+    window.open(whatsappUrl, "_blank");
+
     setShowSuccess(true);
   };
 

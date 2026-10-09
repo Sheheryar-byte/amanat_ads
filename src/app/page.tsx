@@ -47,7 +47,7 @@ export default function Home() {
             pointerEvents: "none",
           }}
         >
-          <div style={{ width: 60, height: 60, position: "relative", pointerEvents: "auto" }}>
+          <div style={{ width: 85, height: 85, position: "relative", pointerEvents: "auto" }}>
             <Image
               src="/ms39/assets/headerlogo.png"
               alt="Amanat Eye Hospital Logo"
@@ -56,24 +56,47 @@ export default function Home() {
               priority
             />
           </div>
-          <Link
-            href="/book-appointment"
-            className="book-now-btn"
-            style={{
-              pointerEvents: "auto",
-              backgroundColor: isScrolled ? "#723838" : "#ffffff",
-              borderColor: isScrolled ? "#723838" : "#ffffff",
-              color: isScrolled ? "#ffffff" : "#381212",
-              padding: "10px 24px",
-              borderRadius: "8px",
-              fontWeight: "bold",
-              textDecoration: "none",
-              fontFamily: "var(--font-inter), sans-serif",
-              transition: "all 0.3s ease"
-            }}
-          >
-            Book Now
-          </Link>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", pointerEvents: "auto", alignItems: "stretch" }}>
+            <Link
+              href="/book-appointment"
+              className="book-now-btn"
+              style={{
+                backgroundColor: isScrolled ? "#723838" : "#ffffff",
+                borderColor: isScrolled ? "#723838" : "#ffffff",
+                color: isScrolled ? "#ffffff" : "#381212",
+                padding: "10px 24px",
+                borderRadius: "8px",
+                fontWeight: "bold",
+                textDecoration: "none",
+                textAlign: "center",
+                fontFamily: "var(--font-inter), sans-serif",
+                transition: "all 0.3s ease"
+              }}
+            >
+              Book Now
+            </Link>
+            <a
+              href="https://amanateyehospital.com/refractive"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="learn-more-btn"
+              style={{
+                backgroundColor: isScrolled ? "transparent" : "rgba(0,0,0,0.1)",
+                border: isScrolled ? "1.5px solid #723838" : "1.5px solid #ffffff",
+                color: isScrolled ? "#723838" : "#ffffff",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                fontWeight: "bold",
+                fontSize: "14px",
+                textDecoration: "none",
+                textAlign: "center",
+                fontFamily: "var(--font-inter), sans-serif",
+                transition: "all 0.3s ease"
+              }}
+            >
+              Learn More
+            </a>
+          </div>
         </header>
 
         {/* Hero Body */}

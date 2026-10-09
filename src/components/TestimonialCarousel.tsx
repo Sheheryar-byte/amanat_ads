@@ -7,28 +7,28 @@ const TESTIMONIALS = [
   {
     name: "Javeria Arshad",
     role: "(Senior Talent Executive)",
-    image: "/assets/pop1.jpg",
+    image: "/ms39/assets/pop1.jpg",
     videoLink: "https://www.youtube.com/watch?v=64cXh887RY4&t=1s",
     text: "For Javeria, glasses and contact lenses often got in the way of the life she wanted to live. Water sports became difficult, contact lenses were uncomfortable during long events, and managing them at weddings, social gatherings, and professional commitments was an ongoing challenge. Looking for a long-term solution, she chose MS-39 Guided Femto LASIK at Amanat Eye Hospital. Today, she enjoys greater freedom and convenience without the daily dependence on glasses or contact lenses."
   },
   {
     name: "Yusma Akhand",
     role: "(Content Creator)",
-    image: "/assets/pop2.png",
+    image: "/ms39/assets/pop2.png",
     videoLink: "https://www.youtube.com/watch?v=FFwz0e69668",
     text: "For 13 years, Yusma relied on glasses to see the world clearly. She had always dreamed of life without them and counted down to her 18th birthday—the milestone that made her eligible for vision correction surgery. When the time came, she chose MS-39 Guided Femto LASIK at Amanat Eye Hospital. Today, she enjoys the freedom of clear vision without glasses, allowing her to create content and embrace everyday moments with greater confidence."
   },
   {
     name: "Aman Ali",
     role: "(Content Creator)",
-    image: "/assets/pop3.jpg",
+    image: "/ms39/assets/pop3.jpg",
     videoLink: "https://www.youtube.com/watch?v=XkvQEkrj9j0",
     text: "After wearing glasses for 7 years, Aman decided it was time to experience life with clearer vision. He chose Clear SUPRA at Amanat Eye Hospital, where Dr. Aamir Asrar recommended a personalised treatment plan based on his eyes and visual needs"
   },
   {
     name: "Azka Malik",
     role: "(Content Creator)",
-    image: "/assets/pop4.png",
+    image: "/ms39/assets/pop4.png",
     videoLink: "https://www.youtube.com/watch?v=W90aX5nEZcY",
     text: "With a prescription of -5.75, Azka had relied on glasses for clear vision in both her personal and professional life. Looking for a long-term solution, she chose MS-39 Guided Femto LASIK at Amanat Eye Hospital under the care of Dr. Aamir Asrar."
   }

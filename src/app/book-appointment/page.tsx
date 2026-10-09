@@ -271,7 +271,7 @@ export default function BookAppointment() {
           <Link href="/ms39">
             <div className="header-logo-container" style={{ position: "relative" }}>
               <Image
-                src="/assets/whiteamanat.png"
+                src="/ms39/assets/whiteamanat.png"
                 alt="Amanat Eye Hospital Logo"
                 fill
                 style={{ objectFit: "contain" }}
@@ -511,7 +511,7 @@ export default function BookAppointment() {
             <div style={{ display: "flex", flexDirection: "column" }}>
               <div style={{ width: 100, height: 100, position: "relative", marginBottom: 20 }}>
                 <Image
-                  src="/assets/footerlogo.png"
+                  src="/ms39/assets/footerlogo.png"
                   alt="Amanat Eye Hospital Logo"
                   fill
                   style={{ objectFit: "contain", objectPosition: "left" }}

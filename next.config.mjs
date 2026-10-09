@@ -13,6 +13,9 @@ const nextConfig = {
   //               VMSS backend instead of the App Service backend.
   basePath: "/ms39",
   assetPrefix: "/ms39",
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;

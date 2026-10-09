@@ -35,13 +35,18 @@ export default function BookAppointment() {
     
     // Save to Database (MongoDB)
     try {
-      await fetch('/ms39/api/appointments', {
+      const res = await fetch('/ms39/api/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(entry),
       });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        alert(`Warning: Database connection failed (Status ${res.status}). Error: ${errorData.error || 'Unknown'}\n\nPlease make sure your MONGODB_URI secret was saved correctly in GitHub Settings -> Secrets before the deployment ran.`);
+      }
     } catch (e) {
       console.error("Failed to save to database", e);
+      alert("Error connecting to the database server.");
     }
     
     // Build WhatsApp Message

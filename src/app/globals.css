@@ -496,3 +496,41 @@ body {
     padding: 0 24px;
   }
 }
+/* ============================================
+   HEADER RESPONSIVENESS
+   ============================================ */
+.header-logo-container {
+  width: 85px;
+  height: 85px;
+  transition: all 0.3s ease;
+}
+
+.header-buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 640px) {
+  .header-logo-container {
+    width: 55px !important;
+    height: 55px !important;
+  }
+  .header-buttons-container {
+    flex-direction: row !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+  .book-now-btn {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+  }
+  .learn-more-btn {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+  }
+  .hero-content {
+    padding: 130px 0 32px 0 !important; 
+  }
+}

@@ -47,7 +47,7 @@ export default function Home() {
             pointerEvents: "none",
           }}
         >
-          <div style={{ width: 85, height: 85, position: "relative", pointerEvents: "auto" }}>
+          <div className="header-logo-container" style={{ position: "relative", pointerEvents: "auto" }}>
             <Image
               src="/ms39/assets/headerlogo.png"
               alt="Amanat Eye Hospital Logo"
@@ -56,7 +56,7 @@ export default function Home() {
               priority
             />
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px", pointerEvents: "auto", alignItems: "stretch" }}>
+          <div className="header-buttons-container" style={{ pointerEvents: "auto", alignItems: "stretch" }}>
             <Link
               href="/book-appointment"
               className="book-now-btn"

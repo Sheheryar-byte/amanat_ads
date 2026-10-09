@@ -269,7 +269,7 @@ export default function BookAppointment() {
           }}
         >
           <Link href="/ms39">
-            <div style={{ width: 85, height: 85, position: "relative" }}>
+            <div className="header-logo-container" style={{ position: "relative" }}>
               <Image
                 src="/ms39/assets/headerlogo.png"
                 alt="Amanat Eye Hospital Logo"
@@ -279,7 +279,7 @@ export default function BookAppointment() {
               />
             </div>
           </Link>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px", pointerEvents: "auto", alignItems: "stretch" }}>
+          <div className="header-buttons-container" style={{ pointerEvents: "auto", alignItems: "stretch" }}>
             <Link
               href="/book-appointment"
               style={{

@@ -271,7 +271,7 @@ export default function BookAppointment() {
           <Link href="/ms39">
             <div className="header-logo-container" style={{ position: "relative" }}>
               <Image
-                src="/ms39/assets/headerlogo.png"
+                src="/ms39/assets/whiteamanat.png"
                 alt="Amanat Eye Hospital Logo"
                 fill
                 style={{ objectFit: "contain" }}
@@ -279,23 +279,7 @@ export default function BookAppointment() {
               />
             </div>
           </Link>
-          <div className="header-buttons-container" style={{ pointerEvents: "auto", alignItems: "stretch" }}>
-            <Link
-              href="/book-appointment"
-              style={{
-                backgroundColor: isScrolled ? "#723838" : "#ffffff",
-                color: isScrolled ? "#ffffff" : "#381212",
-                padding: "10px 24px",
-                borderRadius: "8px",
-                fontWeight: "bold",
-                textDecoration: "none",
-                textAlign: "center",
-                fontFamily: "var(--font-inter), sans-serif",
-                transition: "all 0.3s ease",
-              }}
-            >
-              Book Now
-            </Link>
+          <div className="header-buttons-container" style={{ pointerEvents: "auto", alignItems: "center" }}>
             <a
               href="https://amanateyehospital.com/refractive"
               target="_blank"
@@ -305,7 +289,7 @@ export default function BookAppointment() {
                 backgroundColor: isScrolled ? "transparent" : "rgba(0,0,0,0.1)",
                 border: isScrolled ? "1.5px solid #723838" : "1.5px solid #ffffff",
                 color: isScrolled ? "#723838" : "#ffffff",
-                padding: "6px 12px",
+                padding: "8px 16px",
                 borderRadius: "8px",
                 fontWeight: "bold",
                 fontSize: "14px",
@@ -317,6 +301,22 @@ export default function BookAppointment() {
             >
               Learn More
             </a>
+            <Link
+              href="/book-appointment"
+              style={{
+                backgroundColor: isScrolled ? "#723838" : "#ffffff",
+                color: isScrolled ? "#ffffff" : "#381212",
+                padding: "8px 24px",
+                borderRadius: "8px",
+                fontWeight: "bold",
+                textDecoration: "none",
+                textAlign: "center",
+                fontFamily: "var(--font-inter), sans-serif",
+                transition: "all 0.3s ease",
+              }}
+            >
+              Book Now
+            </Link>
           </div>
         </header>
 

@@ -507,8 +507,9 @@ body {
 
 .header-buttons-container {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
   transition: all 0.3s ease;
 }
 

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
+import TestimonialCarousel from "../components/TestimonialCarousel";
 
 export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -49,32 +50,14 @@ export default function Home() {
         >
           <div className="header-logo-container" style={{ position: "relative", pointerEvents: "auto" }}>
             <Image
-              src="/ms39/assets/headerlogo.png"
+              src="/ms39/assets/whiteamanat.png"
               alt="Amanat Eye Hospital Logo"
               fill
               style={{ objectFit: "contain" }}
               priority
             />
           </div>
-          <div className="header-buttons-container" style={{ pointerEvents: "auto", alignItems: "stretch" }}>
-            <Link
-              href="/book-appointment"
-              className="book-now-btn"
-              style={{
-                backgroundColor: isScrolled ? "#723838" : "#ffffff",
-                borderColor: isScrolled ? "#723838" : "#ffffff",
-                color: isScrolled ? "#ffffff" : "#381212",
-                padding: "10px 24px",
-                borderRadius: "8px",
-                fontWeight: "bold",
-                textDecoration: "none",
-                textAlign: "center",
-                fontFamily: "var(--font-inter), sans-serif",
-                transition: "all 0.3s ease"
-              }}
-            >
-              Book Now
-            </Link>
+          <div className="header-buttons-container" style={{ pointerEvents: "auto", alignItems: "center" }}>
             <a
               href="https://amanateyehospital.com/refractive"
               target="_blank"
@@ -84,7 +67,7 @@ export default function Home() {
                 backgroundColor: isScrolled ? "transparent" : "rgba(0,0,0,0.1)",
                 border: isScrolled ? "1.5px solid #723838" : "1.5px solid #ffffff",
                 color: isScrolled ? "#723838" : "#ffffff",
-                padding: "6px 12px",
+                padding: "8px 16px",
                 borderRadius: "8px",
                 fontWeight: "bold",
                 fontSize: "14px",
@@ -96,6 +79,24 @@ export default function Home() {
             >
               Learn More
             </a>
+            <Link
+              href="/book-appointment"
+              className="book-now-btn"
+              style={{
+                backgroundColor: isScrolled ? "#723838" : "#ffffff",
+                borderColor: isScrolled ? "#723838" : "#ffffff",
+                color: isScrolled ? "#ffffff" : "#381212",
+                padding: "8px 24px",
+                borderRadius: "8px",
+                fontWeight: "bold",
+                textDecoration: "none",
+                textAlign: "center",
+                fontFamily: "var(--font-inter), sans-serif",
+                transition: "all 0.3s ease"
+              }}
+            >
+              Book Now
+            </Link>
           </div>
         </header>
 
@@ -111,9 +112,35 @@ export default function Home() {
                 <span className="hero-title-line-1">Get Glasses Free Life</span>
                 <span className="hero-title-line-2">With MS-39 Guided Femto LASIK</span>
               </h1>
-              <p className="hero-subtitle" style={{ color: "#ffffff", fontFamily: "var(--font-poppins), 'Poppins', sans-serif", fontWeight: 600, fontSize: "clamp(14px, 1.5vw, 17px)", opacity: 0.92 }}>
+              <p className="hero-subtitle" style={{ color: "#ffffff", fontFamily: "var(--font-poppins), 'Poppins', sans-serif", fontWeight: 600, fontSize: "clamp(14px, 1.5vw, 17px)", opacity: 0.92, marginBottom: 24 }}>
                 Because your eyes deserve more than a standard measurement.
               </p>
+              <Link
+                href="/book-appointment"
+                style={{
+                  display: "inline-block",
+                  backgroundColor: "#ffffff",
+                  color: "#723838",
+                  padding: "14px 32px",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                  fontSize: "16px",
+                  textDecoration: "none",
+                  fontFamily: "var(--font-inter), sans-serif",
+                  transition: "all 0.3s ease",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.2)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+                }}
+              >
+                Book your consultation
+              </Link>
             </div>
 
             {/* Right Device Image */}
@@ -488,6 +515,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <TestimonialCarousel />
 
       {/* ============================================
           BOOK YOUR APPOINTMENT (CTA)

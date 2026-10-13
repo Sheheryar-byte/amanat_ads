@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import WhatsAppFloatingButton from "@/components/WhatsAppFloatingButton";
 
 export default function BookAppointment() {
   const [formData, setFormData] = useState({
@@ -10,10 +11,7 @@ export default function BookAppointment() {
     mobileNumber: "",
     city: "",
     age: "",
-    topics: [] as string[],
     contactMethod: [] as string[],
-    preferredTime: [] as string[],
-    notes: "",
   });
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -55,10 +53,7 @@ export default function BookAppointment() {
 *Mobile:* ${formData.mobileNumber}
 *City:* ${formData.city}
 *Age:* ${formData.age}
-*Topics:* ${formData.topics.join(", ") || "None"}
-*Contact Method:* ${formData.contactMethod.join(", ") || "None"}
-*Preferred Time:* ${formData.preferredTime.join(", ") || "None"}
-*Notes:* ${formData.notes || "None"}`;
+*Contact Method:* ${formData.contactMethod.join(", ") || "None"}`;
 
     // Redirect to WhatsApp
     const whatsappUrl = `https://wa.me/923000545879?text=${encodeURIComponent(text)}`;
@@ -67,7 +62,7 @@ export default function BookAppointment() {
     setShowSuccess(true);
   };
 
-  const handleCheckboxChange = (field: "topics" | "contactMethod" | "preferredTime", value: string) => {
+  const handleCheckboxChange = (field: "contactMethod", value: string) => {
     setFormData((prev) => {
       const current = prev[field];
       if (current.includes(value)) {
@@ -392,37 +387,9 @@ export default function BookAppointment() {
             />
           </div>
 
-          <h2 style={{ ...sectionTitleStyle, marginBottom: "8px" }}>Interested in Information About</h2>
-          <p style={{ fontFamily: "var(--font-inter), 'Inter', sans-serif", fontSize: "16px", fontWeight: 600, color: "#111", marginBottom: "24px" }}>
-            (Select all that apply)
-          </p>
+          <h2 style={sectionTitleStyle}>Preferred Contact Method</h2>
 
-          <div style={{ marginBottom: "32px" }}>
-            <p style={{ fontFamily: "var(--font-inter), 'Inter', sans-serif", fontSize: "15px", fontWeight: 600, color: "#111", marginBottom: "16px" }}>
-              Which topic would you like to learn about?
-            </p>
-            {[
-              "Laser vision correction options",
-              "Lens implant options",
-              "Advanced eye procedures",
-              "Not sure - need guidance",
-            ].map((topic) => (
-              <label key={topic} style={checkboxLabelStyle}>
-                <input
-                  type="checkbox"
-                  style={{ width: "16px", height: "16px", accentColor: "#723838", cursor: "pointer" }}
-                  checked={formData.topics.includes(topic)}
-                  onChange={() => handleCheckboxChange("topics", topic)}
-                />
-                {topic}
-              </label>
-            ))}
-          </div>
-
-          <div style={{ marginBottom: "32px" }}>
-            <p style={{ fontFamily: "var(--font-inter), 'Inter', sans-serif", fontSize: "15px", fontWeight: 600, color: "#111", marginBottom: "16px" }}>
-              Preferred contact method
-            </p>
+          <div style={{ marginBottom: "48px" }}>
             {["Call", "WhatsApp"].map((method) => (
               <label key={method} style={checkboxLabelStyle}>
                 <input
@@ -434,33 +401,6 @@ export default function BookAppointment() {
                 {method}
               </label>
             ))}
-          </div>
-
-          <div style={{ marginBottom: "32px" }}>
-            <p style={{ fontFamily: "var(--font-inter), 'Inter', sans-serif", fontSize: "15px", fontWeight: 600, color: "#111", marginBottom: "16px" }}>
-              Preferred time
-            </p>
-            {["Morning", "Evening"].map((time) => (
-              <label key={time} style={checkboxLabelStyle}>
-                <input
-                  type="checkbox"
-                  style={{ width: "16px", height: "16px", accentColor: "#723838", cursor: "pointer" }}
-                  checked={formData.preferredTime.includes(time)}
-                  onChange={() => handleCheckboxChange("preferredTime", time)}
-                />
-                {time}
-              </label>
-            ))}
-          </div>
-
-          <div style={{ marginBottom: "48px" }}>
-            <label style={labelStyle}>Additional notes</label>
-            <textarea
-              placeholder="Anything..."
-              style={{ ...inputStyle, minHeight: "100px", resize: "vertical" }}
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            />
           </div>
 
           <div style={{ display: "flex", justifyContent: "center", marginBottom: "64px" }}>
@@ -656,7 +596,7 @@ export default function BookAppointment() {
                 </svg>
                 <span style={{ fontFamily: "var(--font-poppins), 'Poppins', sans-serif", fontSize: 13, color: "#444", lineHeight: 1.6 }}>
                   Mon - Sat 9 am - 8 pm<br />
-                  Sunday 11 pm - 1 am (Rawalpindi)
+                  Sunday 11 am - 1 pm (Rawalpindi)
                 </span>
               </div>
             </div>
@@ -685,7 +625,7 @@ export default function BookAppointment() {
               </svg>
             </a>
             {/* WhatsApp */}
-            <a href="#" aria-label="WhatsApp" style={{ color: "#111", transition: "color 0.2s", display: "flex" }} onMouseEnter={e => e.currentTarget.style.color = "#723838"} onMouseLeave={e => e.currentTarget.style.color = "#111"}>
+            <a href="https://wa.me/923000545879" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" style={{ color: "#111", transition: "color 0.2s", display: "flex" }} onMouseEnter={e => e.currentTarget.style.color = "#723838"} onMouseLeave={e => e.currentTarget.style.color = "#111"}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
               </svg>
@@ -708,6 +648,9 @@ export default function BookAppointment() {
           </div>
         </div>
       </footer>
+
+      {/* Floating WhatsApp Action Button */}
+      <WhatsAppFloatingButton />
 
     </main>
   );

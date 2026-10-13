@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
+const DB_NAME =
+  process.env.MONGODB_DB_NAME ||
+  (process.env.NODE_ENV === "development" ? "amanat_ads_local" : "amanat_ads");
+
 export async function GET(req: NextRequest) {
   try {
     const client = await clientPromise;
-    const db = client.db("amanat_ads");
+    const db = client.db(DB_NAME);
     
     const appointments = await db
       .collection("appointments")
@@ -23,7 +27,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const client = await clientPromise;
-    const db = client.db("amanat_ads");
+    const db = client.db(DB_NAME);
     
     const data = await req.json();
     
@@ -40,7 +44,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const client = await clientPromise;
-    const db = client.db("amanat_ads");
+    const db = client.db(DB_NAME);
     
     // Clear all
     await db.collection("appointments").deleteMany({});

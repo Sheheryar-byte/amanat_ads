@@ -2,13 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
+const DB_NAME =
+  process.env.MONGODB_DB_NAME ||
+  (process.env.NODE_ENV === "development" ? "amanat_ads_local" : "amanat_ads");
+
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const client = await clientPromise;
-    const db = client.db("amanat_ads");
+    const db = client.db(DB_NAME);
     
     if (!ObjectId.isValid(params.id)) {
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });

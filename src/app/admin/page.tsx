@@ -9,10 +9,10 @@ interface Appointment {
   mobileNumber: string;
   city: string;
   age: string;
-  topics: string[];
-  contactMethod: string[];
-  preferredTime: string[];
-  notes: string;
+  topics?: string[];
+  contactMethod?: string[];
+  preferredTime?: string[];
+  notes?: string;
   submittedAt: string;
 }
 
@@ -144,12 +144,12 @@ export default function AdminPage() {
             { label: "This City (Filter)", value: filtered.length, icon: "📍" },
             {
               label: "Prefer Call",
-              value: appointments.filter((a) => a.contactMethod.includes("Call")).length,
+              value: appointments.filter((a) => a.contactMethod?.includes("Call")).length,
               icon: "📞",
             },
             {
               label: "Prefer WhatsApp",
-              value: appointments.filter((a) => a.contactMethod.includes("WhatsApp")).length,
+              value: appointments.filter((a) => a.contactMethod?.includes("WhatsApp")).length,
               icon: "💬",
             },
           ].map((stat) => (
@@ -296,7 +296,7 @@ export default function AdminPage() {
                   <p style={{ fontSize: "12px", fontWeight: 700, color: "#723838", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>
                     Topics
                   </p>
-                  {apt.topics.length > 0 ? apt.topics.map((t) => (
+                  {apt.topics && apt.topics.length > 0 ? apt.topics.map((t) => (
                     <span
                       key={t}
                       style={{
@@ -321,10 +321,10 @@ export default function AdminPage() {
                     Contact & Time
                   </p>
                   <p style={{ fontSize: "14px", color: "#555", margin: "0 0 4px 0" }}>
-                    📞 {apt.contactMethod.join(", ") || "—"}
+                    📞 {(apt.contactMethod || []).join(", ") || "—"}
                   </p>
                   <p style={{ fontSize: "14px", color: "#555", margin: "0 0 8px 0" }}>
-                    🕐 {apt.preferredTime.join(", ") || "—"}
+                    🕐 {(apt.preferredTime || []).join(", ") || "—"}
                   </p>
                   {apt.notes && (
                     <p style={{ fontSize: "13px", color: "#888", fontStyle: "italic", margin: 0 }}>

@@ -10,7 +10,9 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export function middleware(req: NextRequest) {
   const session = req.cookies.get("admin_session");
-  const secret = process.env.ADMIN_SECRET;
+  const secret =
+    process.env.ADMIN_SECRET ||
+    (process.env.NODE_ENV === "development" ? "amanat_ads_dev_secret_local_key_8492" : undefined);
 
   // Valid session = cookie exists AND matches the server-side secret
   const isAuthenticated = !!secret && session?.value === secret;

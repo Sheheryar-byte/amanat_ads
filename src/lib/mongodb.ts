@@ -1,6 +1,10 @@
 import { MongoClient, ServerApiVersion } from 'mongodb';
 
-const uri = process.env.MONGODB_URI || "";
+const uri =
+  process.env.MONGODB_URI ||
+  (process.env.NODE_ENV === "development"
+    ? "mongodb+srv://marketingdesignaeh_db_user:hWuNphJEBxDX3I8z@cluster0.gpbprfw.mongodb.net/?retryWrites=true&w=majority"
+    : "");
 const options = {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -12,7 +16,7 @@ const options = {
 let client;
 let clientPromise: Promise<MongoClient>;
 
-if (!process.env.MONGODB_URI) {
+if (!uri) {
   // During GitHub Actions build time, MONGODB_URI is not set.
   // We return a rejected promise instead of throwing a top-level error so the build succeeds.
   clientPromise = Promise.reject(new Error('Invalid/Missing environment variable: "MONGODB_URI"'));
